@@ -42,14 +42,15 @@ jobs:
       - name: npm install
         run: npm install
 
-      # O simulador do Arcade e um repo a parte; o staticpkg precisa do public/ dele.
-      # Repo publico, sem secret para ler. Depois do npm install (que recria node_modules).
-      - name: Checkout pxt-arcade-sim
-        uses: actions/checkout@v4
-        with:
-          repository: microsoft/pxt-arcade-sim
-          ref: v0.13.3
-          path: node_modules/pxt-arcade-sim
+      # O repo do simulador (microsoft/pxt-arcade-sim) e privado -> nao da para checkout.
+      # Teste: criar a pasta sim/public (vazia) so para o targetFileList nao crashar e
+      # ver se o staticpkg completa e produz built/packaged/index.html. O sim em si e
+      # carregado de um CDN sandbox a parte pelo editor em runtime.
+      - name: Stub sim public
+        run: |
+          mkdir -p node_modules/pxt-arcade-sim/public
+          echo "placeholder" > node_modules/pxt-arcade-sim/public/.keep
+          ls -la node_modules/pxt-arcade-sim/public
 
       - name: pxt staticpkg
         run: |
