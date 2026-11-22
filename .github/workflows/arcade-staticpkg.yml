@@ -42,6 +42,15 @@ jobs:
       - name: npm install
         run: npm install
 
+      # O simulador do Arcade e um repo a parte; o staticpkg precisa do public/ dele.
+      # Repo publico, sem secret para ler. Depois do npm install (que recria node_modules).
+      - name: Checkout pxt-arcade-sim
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/pxt-arcade-sim
+          ref: v0.13.3
+          path: node_modules/pxt-arcade-sim
+
       - name: pxt staticpkg
         run: |
           export DISPLAY=:99.0
