@@ -48,9 +48,10 @@ jobs:
       # carregado de um CDN sandbox a parte pelo editor em runtime.
       - name: Stub sim public
         run: |
-          mkdir -p node_modules/pxt-arcade-sim/public
-          echo "placeholder" > node_modules/pxt-arcade-sim/public/.keep
-          ls -la node_modules/pxt-arcade-sim/public
+          mkdir -p public sim/public node_modules/pxt-arcade-sim/public
+          echo keep > public/.keep
+          echo keep > sim/public/.keep
+          ls -la public sim/public
 
       - name: pxt staticpkg
         run: |
