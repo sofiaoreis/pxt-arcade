@@ -1,0 +1,80 @@
+name: arcade-staticpkg
+
+# Build estatico hospedavel do editor MakeCode Arcade (fork coders).
+# Corre a mao (workflow_dispatch). Publica built/packaged como artefacto.
+# Iteracao 1: ingles, so para provar que o pipeline staticpkg produz um build
+# hospedavel numa runner limpa. O PT entra depois.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: staticpkg
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Setup Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          npm install -g npm@11
+          sudo npm install -g pxt
+
+      - name: npm install
+        run: npm install
+
+      - name: pxt staticpkg
+        run: |
+          export DISPLAY=:99.0
+          Xvfb :99 -screen 0 1024x768x24 >/dev/null 2>&1 &
+          sleep 2
+          pxt staticpkg --route arcade 2>&1 | tee staticpkg.log
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+          CI: "true"
+
+      - name: Inspecionar saida
+        if: always()
+        run: |
+          echo "=== built/packaged ==="
+          ls -la built/packaged 2>/dev/null | head -40 || echo "SEM built/packaged"
+          du -sh built/packaged 2>/dev/null || true
+          echo "=== index.html? ==="
+          ls -la built/packaged/index.html 2>/dev/null || echo "SEM index.html"
+
+      - name: Upload artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arcade-packaged
+          path: built/packaged
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staticpkg-log
+          path: staticpkg.log
+          retention-days: 7
+          if-no-files-found: ignore
