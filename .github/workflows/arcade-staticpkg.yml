@@ -63,14 +63,31 @@ jobs:
           CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
           CI: "true"
 
+      # Hibrido: o repo do simulador e privado, por isso apontamos o sim do nosso editor
+      # para o host sandbox publico da Microsoft (runtime do jogo, neutro em linguagem).
+      - name: Apontar sim para o host publico
+        run: |
+          cd built/packaged/arcade
+          FILES=$(grep -rlF "/arcade/simulator.html" . 2>/dev/null || true)
+          echo "ficheiros a ajustar:"; echo "$FILES"
+          for f in $FILES; do
+            sed -i \
+              -e 's#/arcade/simulator\.html#https://trg-arcade.userpxt.io/---simulator#g' \
+              -e 's#/arcade/simulatorserviceworker\.js#https://trg-arcade.userpxt.io/---simserviceworker#g' \
+              -e 's#/arcade/workerConfig\.js#https://trg-arcade.userpxt.io/---simworkerconfig#g' \
+              "$f"
+          done
+          echo "=== verificacao (index.html) ==="
+          grep -rhoE '"sim[A-Za-z]*Url": "[^"]+"' index.html | sort -u
+
       - name: Inspecionar saida
         if: always()
         run: |
-          echo "=== built/packaged ==="
-          ls -la built/packaged 2>/dev/null | head -40 || echo "SEM built/packaged"
+          echo "=== built/packaged/arcade ==="
+          ls -la built/packaged/arcade 2>/dev/null | head -40 || echo "SEM built/packaged/arcade"
           du -sh built/packaged 2>/dev/null || true
-          echo "=== index.html? ==="
-          ls -la built/packaged/index.html 2>/dev/null || echo "SEM index.html"
+          echo "=== arcade/index.html? ==="
+          ls -la built/packaged/arcade/index.html 2>/dev/null || echo "SEM arcade/index.html"
 
       - name: Upload artefacto
         if: always()
